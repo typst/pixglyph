@@ -6,3 +6,10 @@ edition = "2021"
 [dependencies]
 ttf-parser = "0.12"
 
+[dev-dependencies]
+iai = { git = "https://github.com/reknih/iai" }
+
+[[bench]]
+name = "oneshot"
+path = "benches/oneshot.rs"
+harness = false
