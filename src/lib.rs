@@ -261,6 +261,13 @@ impl Canvas {
             .collect()
     }
 
+    /// Add to a value in the accumulation buffer.
+    fn add(&mut self, index: usize, delta: f32) {
+        if let Some(a) = self.a.get_mut(index) {
+            *a += delta;
+        }
+    }
+
     /// Draw a straight line.
     fn line(&mut self, p0: Point, p1: Point) {
         if (p0.y - p1.y).abs() <= core::f32::EPSILON {
@@ -269,7 +276,7 @@ impl Canvas {
         let (dir, p0, p1) = if p0.y < p1.y { (1.0, p0, p1) } else { (-1.0, p1, p0) };
         let dxdy = (p1.x - p0.x) / (p1.y - p0.y);
         let mut x = p0.x;
-        let y0 = p0.y as usize; // note: implicit max of 0 because usize
+        let y0 = p0.y as usize;
         if p0.y < 0.0 {
             x -= p0.y * dxdy;
         }
@@ -281,35 +288,31 @@ impl Canvas {
             let (x0, x1) = if x < xnext { (x, xnext) } else { (xnext, x) };
             let x0floor = x0.floor();
             let x0i = x0floor as i32;
-            let linestart_x0i = linestart as isize + x0i as isize;
-            if linestart_x0i < 0 {
-                continue; // oob index
-            }
             let x1ceil = x1.ceil();
             let x1i = x1ceil as i32;
             if x1i <= x0i + 1 {
                 let xmf = 0.5 * (x + xnext) - x0floor;
-                self.a[linestart_x0i as usize] += d - d * xmf;
-                self.a[linestart_x0i as usize + 1] += d * xmf;
+                self.add(linestart + x0i as usize, d - d * xmf);
+                self.add(linestart + (x0i + 1) as usize, d * xmf);
             } else {
                 let s = (x1 - x0).recip();
                 let x0f = x0 - x0floor;
                 let a0 = 0.5 * s * (1.0 - x0f) * (1.0 - x0f);
                 let x1f = x1 - x1ceil + 1.0;
                 let am = 0.5 * s * x1f * x1f;
-                self.a[linestart_x0i as usize] += d * a0;
+                self.add(linestart + x0i as usize, d * a0);
                 if x1i == x0i + 2 {
-                    self.a[linestart_x0i as usize + 1] += d * (1.0 - a0 - am);
+                    self.add(linestart + (x0i + 1) as usize, d * (1.0 - a0 - am));
                 } else {
                     let a1 = s * (1.5 - x0f);
-                    self.a[linestart_x0i as usize + 1] += d * (a1 - a0);
+                    self.add(linestart + (x0i + 1) as usize, d * (a1 - a0));
                     for xi in x0i + 2 .. x1i - 1 {
-                        self.a[linestart + xi as usize] += d * s;
+                        self.add(linestart + xi as usize, d * s);
                     }
                     let a2 = a1 + (x1i - x0i - 3) as f32 * s;
-                    self.a[linestart + (x1i - 1) as usize] += d * (1.0 - a2 - am);
+                    self.add(linestart + (x1i - 1) as usize, d * (1.0 - a2 - am));
                 }
-                self.a[linestart + x1i as usize] += d * am;
+                self.add(linestart + x1i as usize, d * am);
             }
             x = xnext;
         }
