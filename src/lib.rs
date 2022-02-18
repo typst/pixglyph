@@ -331,14 +331,14 @@ impl Canvas {
 
         // Estimate the required number of subdivisions for flattening.
         let tol = 3.0;
-        let n = 1.0 + (tol * devsq).sqrt().sqrt().floor();
+        let n = 1.0 + (tol * devsq).sqrt().sqrt().floor().min(30.0);
         let nu = n as usize;
         let step = n.recip();
 
         // Flatten the curve.
         let mut t = 0.0;
         let mut p = p0;
-        for _ in 0 .. nu - 1 {
+        for _ in 0 .. nu.saturating_sub(1) {
             t += step;
 
             // Evaluate the curve at `t` using De Casteljau and draw a line from
@@ -385,7 +385,7 @@ impl Canvas {
         // Estimate the required number of subdivisions for conversion.
         let tol = 0.333;
         let max = 432.0 * tol * tol;
-        let n = (err / max).powf(1.0 / 6.0).ceil().max(1.0);
+        let n = (err / max).powf(1.0 / 6.0).ceil().clamp(1.0, 20.0);
         let nu = n as usize;
         let step = n.recip();
         let step4 = step / 4.0;
