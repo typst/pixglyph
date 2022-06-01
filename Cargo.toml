@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ttf-parser = "0.12"
+ttf-parser = "0.15"
 
 [dev-dependencies]
 iai = { git = "https://github.com/reknih/iai" }

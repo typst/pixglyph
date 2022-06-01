@@ -61,7 +61,7 @@ impl Glyph {
     pub fn load(face: &Face, glyph_id: GlyphId) -> Option<Self> {
         let mut builder = Builder::default();
         Some(Self {
-            units_per_em: face.units_per_em().unwrap_or(1000),
+            units_per_em: face.units_per_em(),
             bbox: face.outline_glyph(glyph_id, &mut builder)?,
             segments: builder.segments,
         })
