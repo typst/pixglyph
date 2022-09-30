@@ -9,8 +9,8 @@ const IBM_PLEX: &[u8] = include_bytes!("../fonts/IBMPlexSans-Bold.ttf");
 
 #[test]
 fn test_load_all() {
-    let face = Face::from_slice(SOURCE_SANS, 0).unwrap();
-    for i in 0..face.number_of_glyphs() {
+    let face = Face::parse(SOURCE_SANS, 0).unwrap();
+    for i in 0 .. face.number_of_glyphs() {
         Glyph::load(&face, GlyphId(i));
     }
 }
@@ -30,7 +30,7 @@ fn raster_letter(font: &[u8], letter: char, x: f32, y: f32, s: f32) -> bool {
     let out_path = format!("target/{}.ppm", letter);
     let ref_path = format!("tests/{}.ppm", letter);
 
-    let face = Face::from_slice(font, 0).unwrap();
+    let face = Face::parse(font, 0).unwrap();
     let id = face.glyph_index(letter).unwrap();
     let glyph = Glyph::load(&face, id).unwrap();
     let bitmap = glyph.rasterize(x, y, s);

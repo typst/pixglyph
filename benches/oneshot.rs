@@ -16,33 +16,33 @@ main!(
 );
 
 fn bench_load_simple(iai: &mut Iai) {
-    let face = Face::from_slice(ROBOTO, 0).unwrap();
+    let face = Face::parse(ROBOTO, 0).unwrap();
     let id = face.glyph_index('A').unwrap();
     iai.run(|| Glyph::load(&face, id));
 }
 
 fn bench_load_complex(iai: &mut Iai) {
-    let face = Face::from_slice(ROBOTO, 0).unwrap();
+    let face = Face::parse(ROBOTO, 0).unwrap();
     let id = face.glyph_index('g').unwrap();
     iai.run(|| Glyph::load(&face, id));
 }
 
 fn bench_rasterize_simple(iai: &mut Iai) {
-    let face = Face::from_slice(ROBOTO, 0).unwrap();
+    let face = Face::parse(ROBOTO, 0).unwrap();
     let id = face.glyph_index('A').unwrap();
     let glyph = Glyph::load(&face, id).unwrap();
     iai.run(|| glyph.rasterize(0.0, 0.0, SIZE));
 }
 
 fn bench_rasterize_complex(iai: &mut Iai) {
-    let face = Face::from_slice(ROBOTO, 0).unwrap();
+    let face = Face::parse(ROBOTO, 0).unwrap();
     let id = face.glyph_index('g').unwrap();
     let glyph = Glyph::load(&face, id).unwrap();
     iai.run(|| glyph.rasterize(0.0, 0.0, SIZE));
 }
 
 fn bench_rasterize_cubic(iai: &mut Iai) {
-    let face = Face::from_slice(SOURCE_SANS, 0).unwrap();
+    let face = Face::parse(SOURCE_SANS, 0).unwrap();
     let id = face.glyph_index('g').unwrap();
     let glyph = Glyph::load(&face, id).unwrap();
     iai.run(|| glyph.rasterize(0.0, 0.0, SIZE));
