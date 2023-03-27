@@ -1,7 +1,15 @@
 [package]
 name = "pixglyph"
 version = "0.1.0"
+authors = ["Laurenz <laurmaedje@gmail.com>"]
 edition = "2021"
+description = "Font-rendering with subpixel positioning."
+repository = "https://github.com/typst/pixglyph"
+readme = "README.md"
+license = "Apache-2.0"
+categories = ["rendering"]
+keywords = ["rendering", "font"]
+exclude = ["fonts/*"]
 
 [dependencies]
 ttf-parser = "0.18"

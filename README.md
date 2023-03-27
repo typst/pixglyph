@@ -1,7 +1,15 @@
 # pixglyph
+[![Crates.io](https://img.shields.io/crates/v/pixglyph.svg)](https://crates.io/crates/pixglyph)
+[![Documentation](https://docs.rs/pixglyph/badge.svg)](https://docs.rs/pixglyph)
 
 OpenType glyph rendering.
 
+```toml
+[dependencies]
+pixglyph = "0.1"
+```
+
+## Features
 - Render glyph outlines into coverage bitmaps.
 - Place glyphs at subpixel offsets and scale them to subpixel sizes. This is
   important if you plan to render more than a single glyph since inter-glyph

@@ -10,7 +10,7 @@ const IBM_PLEX: &[u8] = include_bytes!("../fonts/IBMPlexSans-Bold.ttf");
 #[test]
 fn test_load_all() {
     let face = Face::parse(SOURCE_SANS, 0).unwrap();
-    for i in 0 .. face.number_of_glyphs() {
+    for i in 0..face.number_of_glyphs() {
         Glyph::load(&face, GlyphId(i));
     }
 }

@@ -252,7 +252,7 @@ impl Canvas {
     /// Return the accumulated coverage values.
     fn accumulate(self) -> Vec<u8> {
         let mut acc = 0.0;
-        self.a[.. self.w * self.h]
+        self.a[..self.w * self.h]
             .iter()
             .map(|c| {
                 acc += c;
@@ -280,7 +280,7 @@ impl Canvas {
         if p0.y < 0.0 {
             x -= p0.y * dxdy;
         }
-        for y in y0 .. self.h.min(p1.y.ceil() as usize) {
+        for y in y0..self.h.min(p1.y.ceil() as usize) {
             let linestart = y * self.w;
             let dy = ((y + 1) as f32).min(p1.y) - (y as f32).max(p0.y);
             let xnext = x + dxdy * dy;
@@ -306,7 +306,7 @@ impl Canvas {
                 } else {
                     let a1 = s * (1.5 - x0f);
                     self.add(linestart + (x0i + 1) as usize, d * (a1 - a0));
-                    for xi in x0i + 2 .. x1i - 1 {
+                    for xi in x0i + 2..x1i - 1 {
                         self.add(linestart + xi as usize, d * s);
                     }
                     let a2 = a1 + (x1i - x0i - 3) as f32 * s;
@@ -338,7 +338,7 @@ impl Canvas {
         // Flatten the curve.
         let mut t = 0.0;
         let mut p = p0;
-        for _ in 0 .. nu.saturating_sub(1) {
+        for _ in 0..nu.saturating_sub(1) {
             t += step;
 
             // Evaluate the curve at `t` using De Casteljau and draw a line from
@@ -399,7 +399,7 @@ impl Canvas {
         let mut t = 0.0;
         let mut p = p0;
         let mut pd = dp0;
-        for _ in 0 .. nu {
+        for _ in 0..nu {
             t += step;
 
             // Evaluate the curve at `t` using De Casteljau.
