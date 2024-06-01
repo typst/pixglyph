@@ -6,7 +6,7 @@ OpenType glyph rendering.
 
 ```toml
 [dependencies]
-pixglyph = "0.3"
+pixglyph = "0.4"
 ```
 
 ## Features
