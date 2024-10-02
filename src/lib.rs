@@ -262,9 +262,11 @@ impl Canvas {
     }
 
     /// Add to a value in the accumulation buffer.
-    fn add(&mut self, index: usize, delta: f32) {
-        if let Some(a) = self.a.get_mut(index) {
-            *a += delta;
+    fn add(&mut self, linestart: usize, x: i32, delta: f32) {
+        if let Ok(x) = usize::try_from(x) {
+            if let Some(a) = self.a.get_mut(linestart + x) {
+                *a += delta;
+            }
         }
     }
 
@@ -292,27 +294,27 @@ impl Canvas {
             let x1i = x1ceil as i32;
             if x1i <= x0i + 1 {
                 let xmf = 0.5 * (x + xnext) - x0floor;
-                self.add(linestart + x0i as usize, d - d * xmf);
-                self.add(linestart + (x0i + 1) as usize, d * xmf);
+                self.add(linestart, x0i, d - d * xmf);
+                self.add(linestart, x0i + 1, d * xmf);
             } else {
                 let s = (x1 - x0).recip();
                 let x0f = x0 - x0floor;
                 let a0 = 0.5 * s * (1.0 - x0f) * (1.0 - x0f);
                 let x1f = x1 - x1ceil + 1.0;
                 let am = 0.5 * s * x1f * x1f;
-                self.add(linestart + x0i as usize, d * a0);
+                self.add(linestart, x0i, d * a0);
                 if x1i == x0i + 2 {
-                    self.add(linestart + (x0i + 1) as usize, d * (1.0 - a0 - am));
+                    self.add(linestart, x0i + 1, d * (1.0 - a0 - am));
                 } else {
                     let a1 = s * (1.5 - x0f);
-                    self.add(linestart + (x0i + 1) as usize, d * (a1 - a0));
+                    self.add(linestart, x0i + 1, d * (a1 - a0));
                     for xi in x0i + 2..x1i - 1 {
-                        self.add(linestart + xi as usize, d * s);
+                        self.add(linestart, xi, d * s);
                     }
                     let a2 = a1 + (x1i - x0i - 3) as f32 * s;
-                    self.add(linestart + (x1i - 1) as usize, d * (1.0 - a2 - am));
+                    self.add(linestart, x1i - 1, d * (1.0 - a2 - am));
                 }
-                self.add(linestart + x1i as usize, d * am);
+                self.add(linestart, x1i, d * am);
             }
             x = xnext;
         }

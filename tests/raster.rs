@@ -6,6 +6,7 @@ use ttf_parser::{Face, GlyphId};
 const ROBOTO: &[u8] = include_bytes!("../fonts/Roboto-Regular.ttf");
 const SOURCE_SANS: &[u8] = include_bytes!("../fonts/SourceSans3-Regular.otf");
 const IBM_PLEX: &[u8] = include_bytes!("../fonts/IBMPlexSans-Bold.ttf");
+const LIBERTINUS: &[u8] = include_bytes!("../fonts/LibertinusSerif-Regular.otf");
 
 #[test]
 fn test_load_all() {
@@ -21,6 +22,7 @@ fn test_rasterize() {
     ok &= raster_letter(ROBOTO, 'A', 0.0, 0.0, 100.0);
     ok &= raster_letter(SOURCE_SANS, 'g', 0.0, 0.0, 400.0);
     ok &= raster_letter(IBM_PLEX, 'l', 138.48, 95.84, 80.0);
+    ok &= raster_letter(LIBERTINUS, '(', 114.09056, 34.47, 22.0);
     if !ok {
         panic!();
     }
