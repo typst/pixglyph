@@ -1,6 +1,6 @@
 [package]
 name = "pixglyph"
-version = "0.5.1"
+version = "0.6.0"
 authors = ["Laurenz <laurmaedje@gmail.com>"]
 edition = "2021"
 description = "Font-rendering with subpixel positioning."
