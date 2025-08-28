@@ -37,6 +37,8 @@ pub struct Glyph {
     bbox: Rect,
     /// The path segments.
     segments: Vec<Segment>,
+    /// Degrees of skew to apply to correctly render the font as italic.
+    italic_angle: f32,
 }
 
 /// A path segment.
@@ -64,6 +66,7 @@ impl Glyph {
             units_per_em: face.units_per_em(),
             bbox: face.outline_glyph(glyph_id, &mut builder)?,
             segments: builder.segments,
+            italic_angle: face.italic_angle(),
         })
     }
 
@@ -101,14 +104,19 @@ impl Glyph {
         // we have to divide by units per em.
         let s = size / self.units_per_em as f32;
 
+        let k = self.italic_angle.to_radians().tan();
+        // Bounding box needs adjustment for skew.
+        let x_min = self.bbox.x_min as f32 + f32::min(k * self.bbox.y_min as f32, k * self.bbox.y_max as f32);
+        let x_max = self.bbox.x_max as f32 + f32::max(k * self.bbox.y_min as f32, k * self.bbox.y_max as f32);
+
         // Determine the pixel-aligned bounding box of the glyph in the larger
         // pixel raster. For y, we flip and sign and min/max because Y-up. We
         // add a bit of horizontal slack to prevent floating problems when the
         // curve is directly at the border (only needed horizontally due to
         // row-by-row data layout).
         let slack = 0.01;
-        let left = (x + s * self.bbox.x_min as f32 - slack).floor() as i32;
-        let right = (x + s * self.bbox.x_max as f32 + slack).ceil() as i32;
+        let left = (x + s * x_min - slack).floor() as i32;
+        let right = (x + s * x_max + slack).ceil() as i32;
         let top = (y - s * self.bbox.y_max as f32).floor() as i32;
         let bottom = (y - s * self.bbox.y_min as f32).ceil() as i32;
         let width = (right - left) as u32;
@@ -117,7 +125,7 @@ impl Glyph {
         // Create function to transform individual points.
         let dx = x - left as f32;
         let dy = y - top as f32;
-        let t = |p: Point| point(dx + p.x * s, dy - p.y * s);
+        let t = |p: Point| point(dx + (p.x + k * p.y) * s, dy - p.y * s);
 
         // Draw!
         let mut canvas = Canvas::new(width, height);
