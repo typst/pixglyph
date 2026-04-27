@@ -11,14 +11,14 @@
 //!
 //! _Note on text:_  This library does not provide any capabilities to map
 //! text/characters to glyph ids. Instead, you should use a proper shaping
-//! library (like [`rustybuzz`]) to do this step. This will take care of proper
+//! library (like [`harfrust`]) to do this step. This will take care of proper
 //! glyph positioning, ligatures and more.
 //!
 //! _Note on emojis:_ This library only supports normal outlines. How to best
 //! render bitmap, SVG and colored glyphs depends very much on your rendering
 //! environment.
 //!
-//! [`rustybuzz`]: https://github.com/RazrFalcon/rustybuzz
+//! [`harfrust`]: https://github.com/harfbuzz/harfrust
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
@@ -26,7 +26,12 @@
 use std::fmt::{self, Debug, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
 
-use ttf_parser::{Face, GlyphId, OutlineBuilder, Rect};
+use skrifa::instance::{LocationRef, Size};
+use skrifa::metrics::BoundingBox;
+use skrifa::outline::pen::ControlBoundsPen;
+use skrifa::outline::{DrawSettings, OutlinePen};
+use skrifa::raw::TableProvider;
+use skrifa::{FontRef, GlyphId, MetadataProvider};
 
 /// A loaded glyph that is ready for rendering.
 #[derive(Debug, Clone)]
@@ -34,7 +39,7 @@ pub struct Glyph {
     /// The number of font design units per em unit.
     units_per_em: u16,
     /// The glyph bounding box.
-    bbox: Rect,
+    bbox: BoundingBox,
     /// The path segments.
     segments: Vec<Segment>,
 }
@@ -51,18 +56,27 @@ enum Segment {
 }
 
 impl Glyph {
-    /// Load the glyph with the given `glyph_id` from the face.
+    /// Load the glyph with the given `glyph_id` from the font.
     ///
-    /// This method takes a `ttf-parser` font face. If you don't already use
-    /// `ttf-parser`, you can [create a face](ttf_parser::Face::from_slice) from
-    /// raw OpenType font bytes with very little overhead.
+    /// This method takes a `skrifa` font reference. If you don't already use
+    /// `skrifa`, you can [create a reference](skifra::FontRef::new) from raw
+    /// OpenType font bytes with very little overhead.
     ///
     /// Returns `None` if the glyph does not exist or the outline is malformed.
-    pub fn load(face: &Face, glyph_id: GlyphId) -> Option<Self> {
+    pub fn load(font: &FontRef, glyph_id: GlyphId) -> Option<Self> {
         let mut builder = Builder::default();
+        let size = Size::unscaled();
+        let location = LocationRef::default();
+        let settings = DrawSettings::unhinted(size, location);
+
+        font.outline_glyphs()
+            .get(glyph_id)?
+            .draw(settings, &mut builder)
+            .ok()?;
+
         Some(Self {
-            units_per_em: face.units_per_em(),
-            bbox: face.outline_glyph(glyph_id, &mut builder)?,
+            units_per_em: font.head().map(|head| head.units_per_em()).unwrap_or_default(),
+            bbox: builder.bounding_box()?,
             segments: builder.segments,
         })
     }
@@ -107,10 +121,10 @@ impl Glyph {
         // curve is directly at the border (only needed horizontally due to
         // row-by-row data layout).
         let slack = 0.01;
-        let left = (x + s * self.bbox.x_min as f32 - slack).floor() as i32;
-        let right = (x + s * self.bbox.x_max as f32 + slack).ceil() as i32;
-        let top = (y - s * self.bbox.y_max as f32).floor() as i32;
-        let bottom = (y - s * self.bbox.y_min as f32).ceil() as i32;
+        let left = (x + s * self.bbox.x_min - slack).floor() as i32;
+        let right = (x + s * self.bbox.x_max + slack).ceil() as i32;
+        let top = (y - s * self.bbox.y_max).floor() as i32;
+        let bottom = (y - s * self.bbox.y_min).ceil() as i32;
         let width = (right - left) as u32;
         let height = (bottom - top) as u32;
 
@@ -178,23 +192,33 @@ struct Builder {
     segments: Vec<Segment>,
     start: Option<Point>,
     last: Point,
+    bounds: ControlBoundsPen,
 }
 
-impl OutlineBuilder for Builder {
+impl Builder {
+    fn bounding_box(&self) -> Option<BoundingBox> {
+        self.bounds.bounding_box()
+    }
+}
+
+impl OutlinePen for Builder {
     fn move_to(&mut self, x: f32, y: f32) {
         self.start = Some(point(x, y));
         self.last = point(x, y);
+        self.bounds.move_to(x, y);
     }
 
     fn line_to(&mut self, x: f32, y: f32) {
         self.segments.push(Segment::Line(self.last, point(x, y)));
         self.last = point(x, y);
+        self.bounds.line_to(x, y);
     }
 
     fn quad_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32) {
         self.segments
             .push(Segment::Quad(self.last, point(x1, y1), point(x2, y2)));
         self.last = point(x2, y2);
+        self.bounds.quad_to(x1, y1, x2, y2);
     }
 
     fn curve_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32) {
@@ -205,6 +229,7 @@ impl OutlineBuilder for Builder {
             point(x3, y3),
         ));
         self.last = point(x3, y3);
+        self.bounds.curve_to(x1, y1, x2, y2, x3, y3);
     }
 
     fn close(&mut self) {
@@ -212,6 +237,7 @@ impl OutlineBuilder for Builder {
             self.segments.push(Segment::Line(self.last, start));
             self.last = start;
         }
+        self.bounds.close();
     }
 }
 
