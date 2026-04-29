@@ -12,7 +12,7 @@ keywords = ["rendering", "font"]
 exclude = ["fonts/*"]
 
 [dependencies]
-ttf-parser = "0.25"
+skrifa = "0.42"
 
 [dev-dependencies]
 iai = { git = "https://github.com/reknih/iai" }

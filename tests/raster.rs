@@ -1,7 +1,7 @@
 use std::io::Write;
 
 use pixglyph::Glyph;
-use ttf_parser::{Face, GlyphId};
+use skrifa::{FontRef, MetadataProvider};
 
 const ROBOTO: &[u8] = include_bytes!("../fonts/Roboto-Regular.ttf");
 const SOURCE_SANS: &[u8] = include_bytes!("../fonts/SourceSans3-Regular.otf");
@@ -10,10 +10,10 @@ const LIBERTINUS: &[u8] = include_bytes!("../fonts/LibertinusSerif-Regular.otf")
 
 #[test]
 fn test_load_all() {
-    let face = Face::parse(SOURCE_SANS, 0).unwrap();
-    for i in 0..face.number_of_glyphs() {
-        Glyph::load(&face, GlyphId(i));
-    }
+    let font = FontRef::new(SOURCE_SANS).unwrap();
+    font.charmap().mappings().for_each(|(_, id)| {
+        Glyph::load(&font, id);
+    })
 }
 
 #[test]
@@ -28,13 +28,13 @@ fn test_rasterize() {
     }
 }
 
-fn raster_letter(font: &[u8], letter: char, x: f32, y: f32, s: f32) -> bool {
+fn raster_letter(data: &[u8], letter: char, x: f32, y: f32, s: f32) -> bool {
     let out_path = format!("target/{}.ppm", letter);
     let ref_path = format!("tests/{}.ppm", letter);
 
-    let face = Face::parse(font, 0).unwrap();
-    let id = face.glyph_index(letter).unwrap();
-    let glyph = Glyph::load(&face, id).unwrap();
+    let font = FontRef::new(data).unwrap();
+    let id = font.charmap().map(letter).unwrap();
+    let glyph = Glyph::load(&font, id).unwrap();
     let bitmap = glyph.rasterize(x, y, s);
 
     let mut ppm = vec![];
