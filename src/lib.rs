@@ -60,9 +60,18 @@ impl Glyph {
     /// Returns `None` if the glyph does not exist or the outline is malformed.
     pub fn load(face: &Face, glyph_id: GlyphId) -> Option<Self> {
         let mut builder = Builder::default();
+        let bbox = face.outline_glyph(glyph_id, &mut builder)?;
+
+        // CFF2 does not have an `endchar` operator and ttf-parser does not emit
+        // explicit `.close()` calls for CFF2 outlines. Having an unclosed path
+        // can have adverse effects on the render, so we explicitly close the
+        // path. Note that this is a no-op if the path was already closed
+        // through ttf-parser.
+        builder.close();
+
         Some(Self {
             units_per_em: face.units_per_em(),
-            bbox: face.outline_glyph(glyph_id, &mut builder)?,
+            bbox,
             segments: builder.segments,
         })
     }
