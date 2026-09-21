@@ -281,7 +281,7 @@ impl Canvas {
 
     /// Draw a straight line.
     fn line(&mut self, p0: Point, p1: Point) {
-        if (p0.y - p1.y).abs() <= core::f32::EPSILON {
+        if (p0.y - p1.y).abs() <= f32::EPSILON {
             return;
         }
         let (dir, p0, p1) = if p0.y < p1.y { (1.0, p0, p1) } else { (-1.0, p1, p0) };
