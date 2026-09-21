@@ -15,6 +15,10 @@ The Apache License Version 2.0 applies to:
 * Roboto-Regular.ttf
   (https://github.com/googlefonts/roboto)
 
+* gpos1_2_font1.otf
+  Copyright 2000-2016 Adobe Systems Incorporated. All Rights Reserved.
+  (https://github.com/harfbuzz/harfbuzz/tree/main/test/shape/data/aots)
+
 You may find a copy of the Apache 2.0 License in the `LICENSE` file.
 ================================================================================
 
@@ -37,6 +41,19 @@ The SIL Open Font License Version 1.1 applies to:
 
 * NotoSerifCJK-*.otf fonts
   (https://github.com/notofonts/noto-cjk)
+
+* Roboto-VariableFont_wdth,wght.ttf
+  Copyright 2011 The Roboto Project Authors
+  (https://github.com/googlefonts/roboto-classic)
+
+* Asana-Math.otf
+  Copyright (c) 2007-2025, Apostolos Syropoulos (<asyropoulos@yahoo.com),
+  with Reserved Font Name Asana Math.
+  Copyright (c) 2000 Young Ryu,
+  with Reserved Font Name pxfonts.
+  Copyright (c) 1997, 1999 Claudio Beccari, 
+  with Reserved Font Name gsmn1000.
+  (https://ctan.org/pkg/asana-math)
 
 -----------------------------------------------------------
 SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007

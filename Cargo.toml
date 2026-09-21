@@ -12,7 +12,7 @@ keywords = ["rendering", "font"]
 exclude = ["fonts/*"]
 
 [dependencies]
-ttf-parser = "0.25"
+skrifa = { git = "https://github.com/googlefonts/fontations", rev = "9a4f247", default-features = false, features = ["std"] }
 
 [dev-dependencies]
 iai = { git = "https://github.com/reknih/iai" }
