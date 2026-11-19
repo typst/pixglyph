@@ -1,7 +1,7 @@
 use iai::{main, Iai};
 
 use pixglyph::Glyph;
-use ttf_parser::Face;
+use read_fonts::model::Font;
 
 const ROBOTO: &[u8] = include_bytes!("../fonts/Roboto-Regular.ttf");
 const SOURCE_SANS: &[u8] = include_bytes!("../fonts/SourceSans3-Regular.otf");
@@ -16,34 +16,34 @@ main!(
 );
 
 fn bench_load_simple(iai: &mut Iai) {
-    let face = Face::parse(ROBOTO, 0).unwrap();
-    let id = face.glyph_index('A').unwrap();
-    iai.run(|| Glyph::load(&face, id));
+    let font = Font::new(ROBOTO, 0).unwrap();
+    let id = font.charmap().map_unicode('A').unwrap();
+    iai.run(|| Glyph::load(&font, id));
 }
 
 fn bench_load_complex(iai: &mut Iai) {
-    let face = Face::parse(ROBOTO, 0).unwrap();
-    let id = face.glyph_index('g').unwrap();
-    iai.run(|| Glyph::load(&face, id));
+    let font = Font::new(ROBOTO, 0).unwrap();
+    let id = font.charmap().map_unicode('g').unwrap();
+    iai.run(|| Glyph::load(&font, id));
 }
 
 fn bench_rasterize_simple(iai: &mut Iai) {
-    let face = Face::parse(ROBOTO, 0).unwrap();
-    let id = face.glyph_index('A').unwrap();
-    let glyph = Glyph::load(&face, id).unwrap();
+    let font = Font::new(ROBOTO, 0).unwrap();
+    let id = font.charmap().map_unicode('A').unwrap();
+    let glyph = Glyph::load(&font, id).unwrap();
     iai.run(|| glyph.rasterize(0.0, 0.0, SIZE));
 }
 
 fn bench_rasterize_complex(iai: &mut Iai) {
-    let face = Face::parse(ROBOTO, 0).unwrap();
-    let id = face.glyph_index('g').unwrap();
-    let glyph = Glyph::load(&face, id).unwrap();
+    let font = Font::new(ROBOTO, 0).unwrap();
+    let id = font.charmap().map_unicode('g').unwrap();
+    let glyph = Glyph::load(&font, id).unwrap();
     iai.run(|| glyph.rasterize(0.0, 0.0, SIZE));
 }
 
 fn bench_rasterize_cubic(iai: &mut Iai) {
-    let face = Face::parse(SOURCE_SANS, 0).unwrap();
-    let id = face.glyph_index('g').unwrap();
-    let glyph = Glyph::load(&face, id).unwrap();
+    let font = Font::new(SOURCE_SANS, 0).unwrap();
+    let id = font.charmap().map_unicode('g').unwrap();
+    let glyph = Glyph::load(&font, id).unwrap();
     iai.run(|| glyph.rasterize(0.0, 0.0, SIZE));
 }

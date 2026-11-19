@@ -11,14 +11,14 @@
 //!
 //! _Note on text:_  This library does not provide any capabilities to map
 //! text/characters to glyph ids. Instead, you should use a proper shaping
-//! library (like [`rustybuzz`]) to do this step. This will take care of proper
+//! library (like [`harfrust`]) to do this step. This will take care of proper
 //! glyph positioning, ligatures and more.
 //!
 //! _Note on emojis:_ This library only supports normal outlines. How to best
 //! render bitmap, SVG and colored glyphs depends very much on your rendering
 //! environment.
 //!
-//! [`rustybuzz`]: https://github.com/RazrFalcon/rustybuzz
+//! [`harfrust`]: https://github.com/harfbuzz/harfrust
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
@@ -26,7 +26,11 @@
 use std::fmt::{self, Debug, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
 
-use ttf_parser::{Face, GlyphId, OutlineBuilder, Rect};
+use read_fonts::model::glyph::outline::{
+    ControlBoundsSink, DrawMemory, DrawOptions, PathSink,
+};
+use read_fonts::model::Font;
+use read_fonts::types::{BoundingBox, GlyphId};
 
 /// A loaded glyph that is ready for rendering.
 #[derive(Debug, Clone)]
@@ -34,7 +38,7 @@ pub struct Glyph {
     /// The number of font design units per em unit.
     units_per_em: u16,
     /// The glyph bounding box.
-    bbox: Rect,
+    bbox: BoundingBox<f32>,
     /// The path segments.
     segments: Vec<Segment>,
 }
@@ -51,27 +55,26 @@ enum Segment {
 }
 
 impl Glyph {
-    /// Load the glyph with the given `glyph_id` from the face.
+    /// Load the glyph with the given `glyph_id` from the font.
     ///
-    /// This method takes a `ttf-parser` font face. If you don't already use
-    /// `ttf-parser`, you can [create a face](ttf_parser::Face::from_slice) from
-    /// raw OpenType font bytes with very little overhead.
+    /// This method takes a `read-fonts` font. If you don't already use
+    /// `read-fonts`, you can [create a font](read_fonts::model::Font::new) from
+    /// raw OpenType font bytes. The glyph is loaded at the font's variation
+    /// location, which you can set with
+    /// [`Font::instance_builder`](read_fonts::model::Font::instance_builder).
     ///
-    /// Returns `None` if the glyph does not exist or the outline is malformed.
-    pub fn load(face: &Face, glyph_id: GlyphId) -> Option<Self> {
+    /// Returns `None` if the glyph does not exist, is empty, or the outline is
+    /// malformed or too large.
+    pub fn load(font: &Font, glyph_id: GlyphId) -> Option<Self> {
         let mut builder = Builder::default();
-        let bbox = face.outline_glyph(glyph_id, &mut builder)?;
-
-        // CFF2 does not have an `endchar` operator and ttf-parser does not emit
-        // explicit `.close()` calls for CFF2 outlines. Having an unclosed path
-        // can have adverse effects on the render, so we explicitly close the
-        // path. Note that this is a no-op if the path was already closed
-        // through ttf-parser.
-        builder.close();
+        font.outline_glyphs()
+            .get(glyph_id)?
+            .draw(&DrawOptions::default(), DrawMemory::Scratch, &mut builder)
+            .ok()?;
 
         Some(Self {
-            units_per_em: face.units_per_em(),
-            bbox,
+            units_per_em: font.units_per_em(),
+            bbox: builder.bounding_box()?,
             segments: builder.segments,
         })
     }
@@ -116,10 +119,10 @@ impl Glyph {
         // curve is directly at the border (only needed horizontally due to
         // row-by-row data layout).
         let slack = 0.01;
-        let left = (x + s * self.bbox.x_min as f32 - slack).floor() as i32;
-        let right = (x + s * self.bbox.x_max as f32 + slack).ceil() as i32;
-        let top = (y - s * self.bbox.y_max as f32).floor() as i32;
-        let bottom = (y - s * self.bbox.y_min as f32).ceil() as i32;
+        let left = (x + s * self.bbox.x_min - slack).floor() as i32;
+        let right = (x + s * self.bbox.x_max + slack).ceil() as i32;
+        let top = (y - s * self.bbox.y_max).floor() as i32;
+        let bottom = (y - s * self.bbox.y_min).ceil() as i32;
         let width = (right - left) as u32;
         let height = (bottom - top) as u32;
 
@@ -187,23 +190,39 @@ struct Builder {
     segments: Vec<Segment>,
     start: Option<Point>,
     last: Point,
+    bounds: ControlBoundsSink,
 }
 
-impl OutlineBuilder for Builder {
+impl Builder {
+    /// The control box, or `None` if it's empty or doesn't fit into `i16`.
+    fn bounding_box(&self) -> Option<BoundingBox<f32>> {
+        let bbox = self.bounds.bounding_box()?;
+        let fits = |v: f32| (i16::MIN as f32..=i16::MAX as f32).contains(&v.trunc());
+        [bbox.x_min, bbox.y_min, bbox.x_max, bbox.y_max]
+            .into_iter()
+            .all(fits)
+            .then_some(bbox)
+    }
+}
+
+impl PathSink for Builder {
     fn move_to(&mut self, x: f32, y: f32) {
         self.start = Some(point(x, y));
         self.last = point(x, y);
+        self.bounds.move_to(x, y);
     }
 
     fn line_to(&mut self, x: f32, y: f32) {
         self.segments.push(Segment::Line(self.last, point(x, y)));
         self.last = point(x, y);
+        self.bounds.line_to(x, y);
     }
 
     fn quad_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32) {
         self.segments
             .push(Segment::Quad(self.last, point(x1, y1), point(x2, y2)));
         self.last = point(x2, y2);
+        self.bounds.quad_to(x1, y1, x2, y2);
     }
 
     fn curve_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32) {
@@ -214,6 +233,7 @@ impl OutlineBuilder for Builder {
             point(x3, y3),
         ));
         self.last = point(x3, y3);
+        self.bounds.curve_to(x1, y1, x2, y2, x3, y3);
     }
 
     fn close(&mut self) {
@@ -221,6 +241,7 @@ impl OutlineBuilder for Builder {
             self.segments.push(Segment::Line(self.last, start));
             self.last = start;
         }
+        self.bounds.close();
     }
 }
 

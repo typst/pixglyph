@@ -3,6 +3,7 @@ name = "pixglyph"
 version = "0.6.1"
 authors = ["Laurenz <laurmaedje@gmail.com>"]
 edition = "2021"
+rust-version = "1.85"
 description = "Font-rendering with subpixel positioning."
 repository = "https://github.com/typst/pixglyph"
 readme = "README.md"
@@ -12,7 +13,7 @@ keywords = ["rendering", "font"]
 exclude = ["fonts/*"]
 
 [dependencies]
-ttf-parser = "0.25"
+read-fonts = { version = "0.46", default-features = false, features = ["std"] }
 
 [dev-dependencies]
 iai = { git = "https://github.com/reknih/iai" }

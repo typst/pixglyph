@@ -17,7 +17,6 @@ pixglyph = "0.6"
 - No font data structure you have to store somewhere. Just owned glyphs
   which you can load individually from a font, cache if you care about
   performance, and then render at any size.
-- No unsafe code.
 
 ## License
 This crate is licensed under the terms of the Apache 2.0 license.

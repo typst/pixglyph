@@ -232,6 +232,19 @@ OFL-1.1 --- This license applies to:
   Source: https://github.com/notofonts/noto-cjk
   Not included when used as a library
 
+* Roboto-VariableFont_wdth,wght.ttf
+  Copyright 2011 The Roboto Project Authors
+  (https://github.com/googlefonts/roboto-classic)
+
+* Asana-Math-Subset.otf
+  Copyright (c) 2007-2025, Apostolos Syropoulos (<asyropoulos@yahoo.com),
+  with Reserved Font Name Asana Math.
+  Copyright (c) 2000 Young Ryu,
+  with Reserved Font Name pxfonts.
+  Copyright (c) 1997, 1999 Claudio Beccari, 
+  with Reserved Font Name gsmn1000.
+  (https://ctan.org/pkg/asana-math)
+
 -----------------------------------------------------------
 SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
 -----------------------------------------------------------
