@@ -1,0 +1,4 @@
+allow = ["Apache-2.0"]
+
+# iai is a Git dependency that would prevent generating release NOTICEs
+ignore-dev-dependencies = true
